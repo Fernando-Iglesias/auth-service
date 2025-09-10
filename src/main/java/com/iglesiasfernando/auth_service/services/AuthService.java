@@ -24,4 +24,5 @@ public interface AuthService {
 		}
 	}
 	LoggedUser signUp(String email, String password, String name, List<Phone> phones);
+	LoggedUser login(String email, String password);
 }

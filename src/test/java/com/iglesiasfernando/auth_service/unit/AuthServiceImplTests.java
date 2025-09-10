@@ -3,6 +3,7 @@ package com.iglesiasfernando.auth_service.unit;
 import com.iglesiasfernando.auth_service.entities.Phone;
 import com.iglesiasfernando.auth_service.entities.User;
 import com.iglesiasfernando.auth_service.exceptions.EmailAlreadyExistsException;
+import com.iglesiasfernando.auth_service.exceptions.InvalidCredentialsException;
 import com.iglesiasfernando.auth_service.repositories.UserRepository;
 import com.iglesiasfernando.auth_service.services.AuthService;
 import com.iglesiasfernando.auth_service.utils.JwtTokenUtil;
@@ -130,5 +131,50 @@ public class AuthServiceImplTests {
 		);
 
 		assertEquals("User with email cat@meow.com already exists", exception.getMessage());
+	}
+
+	@Test
+	void loginShouldReturnUserAndTokenWhenCredentialsAreValid() {
+		String email = "cat@meow.com";
+		String password = "Meowmeow89";
+		String encodedPassword = passwordEncoder.encode(password);
+		String expectedToken = "mockedToken";
+
+		User user = new User(email, encodedPassword, "Snowball");
+		userRepository.saveAndFlush(user);
+
+		when(jwtTokenUtil.generateAuthenticationToken(email)).thenReturn(expectedToken);
+
+		AuthService.LoggedUser loggedUser = authService.login(email, password);
+
+		assertNotNull(loggedUser);
+		assertNotNull(loggedUser.getUser());
+		assertEquals(email, loggedUser.getUser().getEmail());
+		assertEquals(expectedToken, loggedUser.getToken());
+	}
+
+	@Test
+	void loginShouldThrowExceptionWhenEmailDoesNotExist() {
+		InvalidCredentialsException exception = assertThrows(InvalidCredentialsException.class, () ->
+			authService.login("nonexistent@meow.com", "Meowmeow89")
+		);
+
+		assertEquals("Invalid email or password", exception.getMessage());
+	}
+
+	@Test
+	void loginShouldThrowExceptionWhenPasswordIsInvalid() {
+		String email = "cat@meow.com";
+		String password = "Meowmeow89";
+		String encodedPassword = passwordEncoder.encode(password);
+
+		User user = new User(email, encodedPassword, "Snowball");
+		userRepository.saveAndFlush(user);
+
+		InvalidCredentialsException exception = assertThrows(InvalidCredentialsException.class, () ->
+			authService.login(email, "WrongPassword")
+		);
+
+		assertEquals("Invalid email or password", exception.getMessage());
 	}
 }

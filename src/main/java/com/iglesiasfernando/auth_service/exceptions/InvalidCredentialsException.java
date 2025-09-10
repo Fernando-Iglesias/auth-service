@@ -1,11 +1,11 @@
 package com.iglesiasfernando.auth_service.exceptions;
 
-public class EmailAlreadyExistsException extends RuntimeException {
-	public EmailAlreadyExistsException(String message) {
+public class InvalidCredentialsException extends RuntimeException {
+	public InvalidCredentialsException(String message) {
 		super(message);
 	}
 
-	public EmailAlreadyExistsException(String message, Throwable cause) {
+	public InvalidCredentialsException(String message, Throwable cause) {
 		super(message, cause);
 	}
 }

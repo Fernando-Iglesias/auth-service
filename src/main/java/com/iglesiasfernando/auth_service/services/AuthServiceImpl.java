@@ -3,6 +3,7 @@ package com.iglesiasfernando.auth_service.services;
 import com.iglesiasfernando.auth_service.entities.Phone;
 import com.iglesiasfernando.auth_service.entities.User;
 import com.iglesiasfernando.auth_service.exceptions.EmailAlreadyExistsException;
+import com.iglesiasfernando.auth_service.exceptions.InvalidCredentialsException;
 import com.iglesiasfernando.auth_service.repositories.UserRepository;
 import com.iglesiasfernando.auth_service.utils.JwtTokenUtil;
 import org.hibernate.exception.ConstraintViolationException;
@@ -55,6 +56,24 @@ public class AuthServiceImpl implements AuthService {
 		String token = jwtTokenUtil.generateAuthenticationToken(email);
 
 		return new LoggedUser(persistedUser, token);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public LoggedUser login(String email, String password) {
+		Assert.notNull(email, "Email must not be null");
+		Assert.notNull(password, "Password must not be null");
+
+		User user = userRepository.findByEmail(email)
+			.orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+
+		if (!passwordEncoder.matches(password, user.getPassword())) {
+			throw new InvalidCredentialsException("Invalid email or password");
+		}
+
+		String token = jwtTokenUtil.generateAuthenticationToken(email);
+
+		return new LoggedUser(user, token);
 	}
 
 	private void handleDataIntegrityViolationException(DataIntegrityViolationException e, String email) {
