@@ -82,4 +82,17 @@ public class Phone {
 	public void setCountryCode(String countryCode) {
 		this.countryCode = countryCode;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Phone phone = (Phone) o;
+
+		return number != null ? number.equals(phone.number) : phone.number == null &&
+			cityCode != null ? cityCode.equals(phone.cityCode) : phone.cityCode == null &&
+			countryCode != null ? countryCode.equals(phone.countryCode) : phone.countryCode == null;
+
+	}
 }

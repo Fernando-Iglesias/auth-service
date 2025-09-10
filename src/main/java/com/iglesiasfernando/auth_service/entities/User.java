@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = @UniqueConstraint(name = "uk_user_email", columnNames = "email"))
 public class User {
 
 	/**
@@ -25,7 +25,6 @@ public class User {
 	 * The email address of the user.
 	 * Must be unique across all users.
 	 */
-	@Column(unique = true)
 	private String email;
 
 	/**
@@ -44,7 +43,6 @@ public class User {
 	 */
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Phone> phones = new ArrayList<>();
-
 
 	/**
 	 * Timestamp indicating when the user account was created.
@@ -136,6 +134,16 @@ public class User {
 	public void addPhone(Phone phone) {
 		phones.add(phone);
 		phone.setUser(this);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		User user = (User) o;
+
+		return id != null && id.equals(user.id);
 	}
 
 }

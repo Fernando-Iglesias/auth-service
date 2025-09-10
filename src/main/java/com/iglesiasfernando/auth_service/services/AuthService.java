@@ -6,5 +6,22 @@ import com.iglesiasfernando.auth_service.entities.User;
 import java.util.List;
 
 public interface AuthService {
-	User signUp(String email, String password, String name, List<Phone> phones);
+	class LoggedUser {
+		private User user;
+		private String token;
+
+		public LoggedUser(User user, String token) {
+			this.user = user;
+			this.token = token;
+		}
+
+		public User getUser() {
+			return user;
+		}
+
+		public String getToken() {
+			return token;
+		}
+	}
+	LoggedUser signUp(String email, String password, String name, List<Phone> phones);
 }
