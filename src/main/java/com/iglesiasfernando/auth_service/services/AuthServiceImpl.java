@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -59,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
-	@Transactional(readOnly = true)
+	@Transactional
 	public LoggedUser login(String email, String password) {
 		Assert.notNull(email, "Email must not be null");
 		Assert.notNull(password, "Password must not be null");
@@ -70,6 +71,8 @@ public class AuthServiceImpl implements AuthService {
 		if (!passwordEncoder.matches(password, user.getPassword())) {
 			throw new InvalidCredentialsException("Invalid email or password");
 		}
+
+		user.setLastLogin(LocalDateTime.now());
 
 		String token = jwtTokenUtil.generateAuthenticationToken(email);
 

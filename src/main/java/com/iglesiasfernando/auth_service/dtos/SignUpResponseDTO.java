@@ -4,13 +4,12 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class SignUpResponseDTO {
-	private UUID id;
-	private LocalDateTime created;
-	private LocalDateTime lastLogin;
-	private String token;
-	private boolean isActive;
+	private final UUID id;
+	private final LocalDateTime created;
+	private final LocalDateTime lastLogin;
+	private final String token;
+	private final boolean isActive;
 
-	public SignUpResponseDTO() {}
 
 	public SignUpResponseDTO(UUID id, LocalDateTime created, LocalDateTime lastLogin, String token, boolean isActive) {
 		this.id = id;
