@@ -1,0 +1,34 @@
+
+@startuml SequenceDiagramLogin
+title Sequence Diagram - Login Flow
+
+actor Client
+Client -> AuthController: POST /login (LoginRequestDTO)
+AuthController -> AuthService: login(email, password)
+AuthService -> AuthServiceImpl: «implements»
+
+AuthServiceImpl -> UserRepository: findByEmail(email)
+UserRepository -> DB: SELECT user by email
+DB --> UserRepository: user record (or none)
+
+alt User found and password matches
+    AuthServiceImpl -> PasswordEncoder: matches(rawPassword, storedHash)
+    PasswordEncoder --> AuthServiceImpl: true
+    AuthServiceImpl -> AuthServiceImpl: setLastLogin(now)
+    AuthServiceImpl -> UserRepository: save(User)
+    UserRepository -> DB: update lastLogin
+    DB --> UserRepository: saved User
+    AuthServiceImpl -> JwtTokenUtil: generateToken(User)
+    JwtTokenUtil --> AuthServiceImpl: token
+    AuthServiceImpl --> AuthService: LoggedUser(User, token)
+    AuthService --> AuthController: LoggedUser(User, token)
+    AuthController --> Client: LoginResponseDTO (200 OK)
+else Invalid credentials or user not found
+    AuthServiceImpl -> AuthServiceImpl: throw InvalidCredentialsException
+    AuthServiceImpl --> AuthService: throws exception
+    AuthService --> AuthController: exception
+    AuthController -> GlobalExceptionHandler: handle InvalidCredentialsException
+    GlobalExceptionHandler --> Client: ErrorResponse (401 Unauthorized)
+end
+
+@enduml

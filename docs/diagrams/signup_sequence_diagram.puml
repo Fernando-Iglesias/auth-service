@@ -1,0 +1,61 @@
+
+@startuml SequenceDiagram
+title Sequence Diagram - Sign Up Flow
+
+actor Client
+Client -> AuthController: POST /signup (SignUpRequestDTO)
+AuthController -> PhoneConverter: toEntityList()
+PhoneConverter -> AuthController: phones
+AuthController -> AuthService: signUp(email, password, name, phones)
+AuthService -> AuthServiceImpl: «implements»
+
+AuthServiceImpl -> UserRepository: save(User)
+UserRepository -> DB: persist User
+DB --> UserRepository: saved User
+UserRepository --> AuthServiceImpl: saved User
+
+AuthServiceImpl -> JwtTokenUtil: generateToken(User)
+JwtTokenUtil --> AuthServiceImpl: token
+
+AuthServiceImpl --> AuthController: LoggedUser(User, token)
+AuthController --> Client: SignUpResponseDTO (JSON)
+
+@enduml
+
+@startuml SequenceDiagramSignup
+title Sequence Diagram - Sign Up Flow
+
+actor Client
+Client -> AuthController: POST /signup (SignUpRequestDTO)
+AuthController -> PhoneConverter: toEntityList()
+PhoneConverter --> AuthController: phones
+AuthController -> AuthService: signUp(email, password, name, phones)
+AuthService -> AuthServiceImpl: «implements»
+
+alt Valid DTO and email no exists
+    AuthServiceImpl -> UserRepository: save(User)
+    UserRepository -> DB: persist User
+    DB --> UserRepository: saved User
+    UserRepository --> AuthServiceImpl: saved User
+
+    AuthServiceImpl -> JwtTokenUtil: generateToken(User)
+    JwtTokenUtil --> AuthServiceImpl: token
+
+    AuthServiceImpl --> AuthController: LoggedUser(User, token)
+    AuthController --> Client: SignUpResponseDTO (201 Created)
+else Invalid DTO (email or password)
+    AuthController -> SpringValidation: validate DTO
+    SpringValidation -> AuthController: throws MethodArgumentNotValidException
+    AuthController -> GlobalExceptionHandler: handle MethodArgumentNotValidException
+    GlobalExceptionHandler --> Client: ErrorResponse (400 Bad Request)
+else Email already exists
+    AuthServiceImpl -> UserRepository: existsByEmail(email)
+    UserRepository --> AuthServiceImpl: true
+    AuthServiceImpl -> AuthServiceImpl: throw UserAlreadyExistsException
+    AuthServiceImpl --> AuthService: exception
+    AuthService --> AuthController: exception
+    AuthController -> GlobalExceptionHandler: handle UserAlreadyExistsException
+    GlobalExceptionHandler --> Client: ErrorResponse (409 Conflict)
+end
+
+@enduml

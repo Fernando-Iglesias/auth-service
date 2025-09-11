@@ -1,0 +1,38 @@
+
+@startuml ComponentDiagram
+title Component Diagram - User Authentication Service
+
+package "API Layer" {
+  [AuthController]
+}
+
+package "Service Layer" {
+  [AuthService <<interface>>]
+  [AuthServiceImpl]
+}
+
+package "Repository Layer" {
+  [UserRepository]
+}
+
+package "Utilities" {
+  [JwtTokenUtil]
+  [PhoneConverter]
+}
+
+package "Domain Model" {
+  [User]
+  [Phone]
+  [DTOs]
+}
+
+database "H2 Database" as DB
+
+[AuthController] --> [AuthService]
+[AuthServiceImpl] --> [UserRepository]
+[AuthServiceImpl] --> [JwtTokenUtil]
+[AuthController] --> [PhoneConverter]
+[UserRepository] --> DB
+[AuthService] <|.. [AuthServiceImpl]
+
+@enduml
