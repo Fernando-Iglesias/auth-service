@@ -17,12 +17,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		return new BCryptPasswordEncoder();
 	}
 
+	private static final String[] PUBLIC_ENDPOINTS = {
+		"/api/auth/signup",
+		"/api/auth/login",
+		"/api/health"
+	};
+
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		http
 			.csrf().disable()
 			.authorizeRequests()
-			.antMatchers("/api/auth/signup", "/api/auth/login").permitAll()
+			.antMatchers(PUBLIC_ENDPOINTS).permitAll()
 			.anyRequest().authenticated();
 	}
 }

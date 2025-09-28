@@ -16,7 +16,7 @@ Data is stored in an in-memory H2 database.
 -   **Spring Security Crypto (BCrypt)**
 -   **JWT (jjwt)**
 -   **Gradle 7.4**
--   **JUnit 5** + **JaCoCo** (80%+ service layer coverage)
+-   **JUnit 5** + **JaCoCo** (80%+ coverage)
 
 ------------------------------------------------------------------------
 
@@ -42,6 +42,43 @@ Data is stored in an in-memory H2 database.
 
 Application will start at:
 👉 <http://localhost:8080>
+
+------------------------------------------------------------------------
+
+## 📊 Generating and Viewing Test Coverage with JaCoCo
+
+### Generating the Coverage Report
+
+JaCoCo is configured in the project to generate a code coverage report. To generate the report, run the following command:
+
+```bash
+./gradlew clean test jacocoTestReport
+```
+
+This will generate the report files in the build/reports/jacoco/test directory.  
+
+### Viewing the Coverage Report
+1. Navigate to the directory where the report was generated:  
+
+```bash
+cd /build/jacocoHtml
+```
+2. Open the index.html file in your browser to view the report.
+
+- On Linux:
+```bash
+xdg-open index.html
+```
+
+- On macOS:
+```bash
+open index.html
+```
+
+- On Windows:
+```bash
+start index.html
+```
 
 ------------------------------------------------------------------------
 

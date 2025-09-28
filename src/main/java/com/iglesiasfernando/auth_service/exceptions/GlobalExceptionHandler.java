@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -56,6 +57,7 @@ public class GlobalExceptionHandler {
 				validationErrorCodes.getOrDefault(error.getDefaultMessage(), 9999),
 				error.getDefaultMessage()
 			))
+			.sorted(Comparator.comparingInt(ErrorDTO::getCodigo))
 			.collect(Collectors.toList());
 
 		ErrorResponseDTO response = new ErrorResponseDTO(errors);

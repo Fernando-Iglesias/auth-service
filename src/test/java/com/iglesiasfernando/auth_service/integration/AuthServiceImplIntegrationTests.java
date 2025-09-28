@@ -6,20 +6,17 @@ import com.iglesiasfernando.auth_service.exceptions.EmailAlreadyExistsException;
 import com.iglesiasfernando.auth_service.exceptions.InvalidCredentialsException;
 import com.iglesiasfernando.auth_service.repositories.UserRepository;
 import com.iglesiasfernando.auth_service.services.AuthService;
-import com.iglesiasfernando.auth_service.services.AuthServiceImpl;
 import com.iglesiasfernando.auth_service.utils.JwtTokenUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
