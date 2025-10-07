@@ -32,7 +32,7 @@ class UserConverterTest {
 	}
 
 	@Test
-	void toSignUpResponseDTO_mapsAllFieldsCorrectly() {
+	void toSignUpResponseDTOShouldMapAllFieldsCorrectly() {
 		AuthService.LoggedUser loggedUser = createSampleLoggedUser();
 
 		var dto = UserConverter.toSignUpResponseDTO(loggedUser);
@@ -59,7 +59,7 @@ class UserConverterTest {
 	}
 
 	@Test
-	void toLoginResponseDTO_mapsAllFieldsCorrectly() {
+	void toLoginResponseDTOShouldMapAllFieldsCorrectly() {
 		AuthService.LoggedUser sampleUser = createSampleLoggedUser();
 
 		var dto = UserConverter.toLoginResponseDTO(sampleUser);
