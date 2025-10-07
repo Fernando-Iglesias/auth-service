@@ -61,7 +61,8 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	@Transactional
-	public LoggedUser login(String token) {
+	public LoggedUser login(String authHeader) {
+		String token = authHeader.replace("Bearer ", "");
 		String email = jwtUtil.extractUsername(token);
 		User user = userRepository.findByEmail(email)
 			.orElseThrow(() -> new InvalidCredentialsException("Login failed"));

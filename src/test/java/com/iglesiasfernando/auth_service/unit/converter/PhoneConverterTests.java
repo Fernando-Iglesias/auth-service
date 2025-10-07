@@ -1,4 +1,4 @@
-package com.iglesiasfernando.auth_service.unit;
+package com.iglesiasfernando.auth_service.unit.converter;
 
 import com.iglesiasfernando.auth_service.converters.PhoneConverter;
 import com.iglesiasfernando.auth_service.dtos.PhoneDTO;

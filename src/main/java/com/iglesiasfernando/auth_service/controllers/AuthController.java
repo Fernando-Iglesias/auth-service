@@ -1,6 +1,7 @@
 package com.iglesiasfernando.auth_service.controllers;
 
 import com.iglesiasfernando.auth_service.converters.PhoneConverter;
+import com.iglesiasfernando.auth_service.converters.UserConverter;
 import com.iglesiasfernando.auth_service.dtos.LoginResponseDTO;
 import com.iglesiasfernando.auth_service.dtos.SignUpRequestDTO;
 import com.iglesiasfernando.auth_service.dtos.SignUpResponseDTO;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -38,36 +38,15 @@ public class AuthController {
 
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
-			.body(
-				new SignUpResponseDTO(
-					loggedUser.getUser().getId(),
-					loggedUser.getUser().getCreated(),
-					loggedUser.getUser().getLastLogin(),
-					loggedUser.getToken(),
-					loggedUser.getUser().isActive()
-				)
-			);
+			.body(UserConverter.toSignUpResponseDTO(loggedUser));
 	}
 
 	@PostMapping("/login")
 	public ResponseEntity<LoginResponseDTO> login(@RequestHeader("Authorization") String authHeader) {
-		String token = authHeader.replace("Bearer ", "");
-		AuthService.LoggedUser loggedUser = authService.login(token);
+		AuthService.LoggedUser loggedUser = authService.login(authHeader);
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(
-				new LoginResponseDTO(
-					loggedUser.getUser().getId(),
-					loggedUser.getUser().getCreated(),
-					loggedUser.getUser().getLastLogin(),
-					loggedUser.getToken(),
-					loggedUser.getUser().isActive(),
-					loggedUser.getUser().getName(),
-					loggedUser.getUser().getEmail(),
-					loggedUser.getUser().getPassword(),
-					loggedUser.getUser().getPhones().stream().map(PhoneConverter::toDTO).collect(Collectors.toList())
-				)
-			);
+			.body(UserConverter.toLoginResponseDTO(loggedUser));
 	}
 }
