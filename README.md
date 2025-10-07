@@ -110,34 +110,3 @@ start index.html
 ### Sequence Diagram - Login [(PlantUML File)](docs/diagrams/login_sequence_diagram.puml)
 
 ![Component Diagram](docs/images/login_sequence_diagram.png)
-
-------------------------------------------------------------------------
-
-## ✨ Possible Improvements
-
-1.  **Do not log in on sign-up**
-
-    Currently, the sign-up endpoint issues a JWT as per the assignment.
-    In a real-world scenario, registration and authentication should be
-    separated.
-
-2.  **Generate a dedicated JWT for email verification**
-
-    Instead of returning a login token at sign-up, return a **special
-    JWT with longer expiration** to validate the user's email.
-
-3.  **Create a new endpoint for email validation**
-
-    -   Endpoint could receive the verification JWT.
-    -   If valid, the user's account is marked as active.
-
-4.  **Activate user only after email validation**
-
-    -   At sign-up: create the user with `isActive = false`.
-    -   After validation: set `isActive = true`.
-
-------------------------------------------------------------------------
-
-👉 With these improvements, the service would be closer to a
-production-grade design, separating registration from authentication and
-enhancing security.
