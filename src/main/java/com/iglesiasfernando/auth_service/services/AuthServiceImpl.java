@@ -21,13 +21,13 @@ public class AuthServiceImpl implements AuthService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final JwtTokenUtil jwtTokenUtil;
+	private final JwtTokenUtil jwtUtil;
 	private static final String EMAIL_UNIQUE_CONSTRAINT = "UK_USER_EMAIL";
 
-	public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenUtil jwtTokenUtil) {
+	public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenUtil jwtUtil) {
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder;
-		this.jwtTokenUtil = jwtTokenUtil;
+		this.jwtUtil = jwtUtil;
 	}
 
 	@Override
@@ -54,30 +54,32 @@ public class AuthServiceImpl implements AuthService {
 			throw e;
 		}
 
-		String token = jwtTokenUtil.generateAuthenticationToken(email);
+		String token = jwtUtil.generateToken(email);
 
 		return new LoggedUser(persistedUser, token);
 	}
 
 	@Override
 	@Transactional
-	public LoggedUser login(String email, String password) {
-		Assert.notNull(email, "Email must not be null");
-		Assert.notNull(password, "Password must not be null");
-
+	public LoggedUser login(String token) {
+		String email = jwtUtil.extractUsername(token);
 		User user = userRepository.findByEmail(email)
-			.orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+			.orElseThrow(() -> new InvalidCredentialsException("Login failed"));
 
-		if (!passwordEncoder.matches(password, user.getPassword())) {
-			throw new InvalidCredentialsException("Invalid email or password");
+		if (!user.isActive()) {
+			throw new InvalidCredentialsException("Login failed");
 		}
 
+		if (!jwtUtil.validateToken(token, email)) {
+			throw new InvalidCredentialsException("Login failed");
+		}
+
+		String newToken = jwtUtil.generateToken(email);
 		user.setLastLogin(LocalDateTime.now());
 
-		String token = jwtTokenUtil.generateAuthenticationToken(email);
-
-		return new LoggedUser(user, token);
+		return new LoggedUser(user, newToken);
 	}
+
 
 	private void handleDataIntegrityViolationException(DataIntegrityViolationException e, String email) {
 		Throwable cause = e.getCause();

@@ -1,24 +1,25 @@
 package com.iglesiasfernando.auth_service.integration.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.iglesiasfernando.auth_service.dtos.LoginRequestDTO;
 import com.iglesiasfernando.auth_service.dtos.PhoneDTO;
 import com.iglesiasfernando.auth_service.dtos.SignUpRequestDTO;
 import com.iglesiasfernando.auth_service.entities.User;
 import com.iglesiasfernando.auth_service.repositories.UserRepository;
 import com.iglesiasfernando.auth_service.services.AuthService;
+import com.iglesiasfernando.auth_service.utils.JwtTokenUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
 import java.util.Optional;
 
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -39,6 +40,9 @@ public class AuthControllerTests {
 	@Autowired
 	private UserRepository userRepository;
 
+	@MockBean
+	private JwtTokenUtil jwtTokenUtil;
+
 	@AfterEach
 	void tearDown() {
 		userRepository.deleteAll();
@@ -52,6 +56,9 @@ public class AuthControllerTests {
 		request.setPassword("Meowmeow89");
 		request.setPhones(Collections.singletonList(new PhoneDTO("12345678", "11", "54")));
 
+		String validToken = "mockedValidToken";
+		when(jwtTokenUtil.generateToken("cat@meow.com")).thenReturn(validToken);
+
 		String requestJson = objectMapper.writeValueAsString(request);
 
 		Optional<User> user = userRepository.findByEmail("cat@meow.com");
@@ -64,7 +71,7 @@ public class AuthControllerTests {
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.created").exists())
 			.andExpect(jsonPath("$.lastLogin").exists())
-			.andExpect(jsonPath("$.token").exists())
+			.andExpect(jsonPath("$.token").value(validToken))
 			.andExpect(jsonPath("$.active").value(true));
 
 		user = userRepository.findByEmail("cat@meow.com");
@@ -121,23 +128,23 @@ public class AuthControllerTests {
 
 	@Test
 	void loginShouldReturn200WhenParamsAreValid() throws Exception {
-		authService.signUp("cat@meow.com", "Meowmeow89", "Snowball", Collections.emptyList());
+		String email = "cat@meow.com";
+		authService.signUp(email, "Meowmeow89", "Snowball", Collections.emptyList());
 
-		LoginRequestDTO request = new LoginRequestDTO();
-		request.setEmail("cat@meow.com");
-		request.setPassword("Meowmeow89");
-
-		String requestJson = objectMapper.writeValueAsString(request);
-
+		String validToken = "mockedValidToken";
+		String newToken = "mockedNewToken";
+		when(jwtTokenUtil.extractUsername(validToken)).thenReturn(email);
+		when(jwtTokenUtil.validateToken(validToken, email)).thenReturn(true);
+		when(jwtTokenUtil.generateToken("cat@meow.com")).thenReturn(newToken);
 
 		mockMvc.perform(post("/api/auth/login")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(requestJson))
+			.header("Authorization", "Bearer " + validToken)
+			.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.created").exists())
 			.andExpect(jsonPath("$.lastLogin").exists())
-			.andExpect(jsonPath("$.token").exists())
+			.andExpect(jsonPath("$.token").value(newToken))
 			.andExpect(jsonPath("$.active").value(true))
 			.andExpect(jsonPath("$.name").value("Snowball"))
 			.andExpect(jsonPath("$.email").value("cat@meow.com"))
@@ -147,20 +154,17 @@ public class AuthControllerTests {
 
 	@Test
 	void loginShouldReturn401WhenCredentialsAreInvalid() throws Exception {
-		LoginRequestDTO request = new LoginRequestDTO();
-		request.setEmail("cat@meow.com");
-		request.setPassword("Meowmeow89");
-
-		String requestJson = objectMapper.writeValueAsString(request);
-
+		String invalidToken = "mockedInvalidToken";
+		when(jwtTokenUtil.extractUsername(invalidToken)).thenReturn("cat@meow.com");
+		when(jwtTokenUtil.validateToken(invalidToken, "cat@meow.com")).thenReturn(false);
 
 		mockMvc.perform(post("/api/auth/login")
-			.contentType(MediaType.APPLICATION_JSON)
-			.content(requestJson))
-			.andExpect(status().isUnauthorized())
+		.header("Authorization", "Bearer " + invalidToken)
+		.contentType(MediaType.APPLICATION_JSON))
+		.andExpect(status().isUnauthorized())
 		.andExpect(jsonPath("$.error", org.hamcrest.Matchers.hasSize(1)))
 		.andExpect(jsonPath("$.error[0].timestamp").exists())
 		.andExpect(jsonPath("$.error[0].codigo").value(8))
-		.andExpect(jsonPath("$.error[0].detail").value("Invalid email or password"));
+		.andExpect(jsonPath("$.error[0].detail").value("Login failed"));
 	}
 }

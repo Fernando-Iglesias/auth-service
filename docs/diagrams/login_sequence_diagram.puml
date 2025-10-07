@@ -3,7 +3,7 @@
 title Sequence Diagram - Login Flow
 
 actor Client
-Client -> AuthController: POST /login (LoginRequestDTO)
+Client -> AuthController: POST /login (Authorization: Bearer <token>)
 AuthController -> AuthService: login(email, password)
 AuthService -> AuthServiceImpl: «implements»
 

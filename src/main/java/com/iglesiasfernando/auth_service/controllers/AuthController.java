@@ -1,7 +1,6 @@
 package com.iglesiasfernando.auth_service.controllers;
 
 import com.iglesiasfernando.auth_service.converters.PhoneConverter;
-import com.iglesiasfernando.auth_service.dtos.LoginRequestDTO;
 import com.iglesiasfernando.auth_service.dtos.LoginResponseDTO;
 import com.iglesiasfernando.auth_service.dtos.SignUpRequestDTO;
 import com.iglesiasfernando.auth_service.dtos.SignUpResponseDTO;
@@ -10,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,7 +28,7 @@ public class AuthController {
 
 	@PostMapping
 	@RequestMapping("/signup")
-	public ResponseEntity<?> signUp(@Valid @RequestBody SignUpRequestDTO dto) {
+	public ResponseEntity<SignUpResponseDTO> signUp(@Valid @RequestBody SignUpRequestDTO dto) {
 		AuthService.LoggedUser loggedUser = authService.signUp(
 			dto.getEmail(),
 			dto.getPassword(),
@@ -49,13 +49,10 @@ public class AuthController {
 			);
 	}
 
-	@PostMapping
-	@RequestMapping("/login")
-	public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO dto) {
-		AuthService.LoggedUser loggedUser = authService.login(
-			dto.getEmail(),
-			dto.getPassword()
-		);
+	@PostMapping("/login")
+	public ResponseEntity<LoginResponseDTO> login(@RequestHeader("Authorization") String authHeader) {
+		String token = authHeader.replace("Bearer ", "");
+		AuthService.LoggedUser loggedUser = authService.login(token);
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -68,7 +65,7 @@ public class AuthController {
 					loggedUser.getUser().isActive(),
 					loggedUser.getUser().getName(),
 					loggedUser.getUser().getEmail(),
-					dto.getPassword(),
+					loggedUser.getUser().getPassword(),
 					loggedUser.getUser().getPhones().stream().map(PhoneConverter::toDTO).collect(Collectors.toList())
 				)
 			);

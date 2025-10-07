@@ -69,7 +69,7 @@ public class AuthServiceImplIntegrationTests {
 	@Test
 	void signUpShouldCreateUserAndTokenWhenMinimumParamsAreValid() {
 		String expectedToken = "mockedToken";
-		when(jwtTokenUtil.generateAuthenticationToken("cat@meow.com")).thenReturn(expectedToken);
+		when(jwtTokenUtil.generateToken("cat@meow.com")).thenReturn(expectedToken);
 
 		AuthService.LoggedUser loggedUser = authService.signUp("cat@meow.com", "Meowmeow89", null, List.of());
 		User user = loggedUser.getUser();
@@ -93,7 +93,7 @@ public class AuthServiceImplIntegrationTests {
 	@Test
 	void signUpShouldCreateUserWhenAllParamsAreValid() {
 		String expectedToken = "mockedToken";
-		when(jwtTokenUtil.generateAuthenticationToken("cat@meow.com")).thenReturn(expectedToken);
+		when(jwtTokenUtil.generateToken("cat@meow.com")).thenReturn(expectedToken);
 
 		AuthService.LoggedUser loggedUser = authService.signUp(
 			"cat@meow.com",
@@ -122,7 +122,7 @@ public class AuthServiceImplIntegrationTests {
 	@Test
 	void signUpShouldThrowExceptionWhenEmailAlreadyExists() {
 		String expectedToken = "mockedToken";
-		when(jwtTokenUtil.generateAuthenticationToken("cat@meow.com")).thenReturn(expectedToken);
+		when(jwtTokenUtil.generateToken("cat@meow.com")).thenReturn(expectedToken);
 
 		authService.signUp("cat@meow.com", "Meowmeow89", null, List.of());
 
@@ -134,7 +134,7 @@ public class AuthServiceImplIntegrationTests {
 	}
 
 	@Test
-	void loginShouldReturnUserAndTokenWhenCredentialsAreValid() {
+	void loginShouldReturnUserAndTokenWhenCredentialsAreValidAndUserIsActive() {
 		String email = "cat@meow.com";
 		String password = "Meowmeow89";
 		String encodedPassword = passwordEncoder.encode(password);
@@ -143,9 +143,11 @@ public class AuthServiceImplIntegrationTests {
 		User user = new User(email, encodedPassword, "Snowball");
 		userRepository.saveAndFlush(user);
 
-		when(jwtTokenUtil.generateAuthenticationToken(email)).thenReturn(expectedToken);
+		when(jwtTokenUtil.generateToken(email)).thenReturn(expectedToken);
+		when(jwtTokenUtil.extractUsername(expectedToken)).thenReturn(email);
+		when(jwtTokenUtil.validateToken(expectedToken, email)).thenReturn(true);
 
-		AuthService.LoggedUser loggedUser = authService.login(email, password);
+		AuthService.LoggedUser loggedUser = authService.login(expectedToken);
 
 		assertNotNull(loggedUser);
 		assertNotNull(loggedUser.getUser());
@@ -154,27 +156,37 @@ public class AuthServiceImplIntegrationTests {
 	}
 
 	@Test
-	void loginShouldThrowExceptionWhenEmailDoesNotExist() {
-		InvalidCredentialsException exception = assertThrows(InvalidCredentialsException.class, () ->
-			authService.login("nonexistent@meow.com", "Meowmeow89")
-		);
-
-		assertEquals("Invalid email or password", exception.getMessage());
-	}
-
-	@Test
-	void loginShouldThrowExceptionWhenPasswordIsInvalid() {
+	void loginShouldThrowExceptionWhenUserIsNotActive() {
 		String email = "cat@meow.com";
 		String password = "Meowmeow89";
 		String encodedPassword = passwordEncoder.encode(password);
+		String expectedToken = "mockedToken";
 
 		User user = new User(email, encodedPassword, "Snowball");
+		user.setActive(false);
 		userRepository.saveAndFlush(user);
 
+		when(jwtTokenUtil.extractUsername(expectedToken)).thenReturn(email);
+
 		InvalidCredentialsException exception = assertThrows(InvalidCredentialsException.class, () ->
-			authService.login(email, "WrongPassword")
+			authService.login(expectedToken)
 		);
 
-		assertEquals("Invalid email or password", exception.getMessage());
+		assertEquals("Login failed", exception.getMessage());
+	}
+
+	@Test
+	void loginShouldThrowExceptionWhenEmailDoesNotExist() {
+		String nonexistentEmail = "nonexistent@meow.com";
+		String tokenForNonexistentEmail = "mockedTokenForNonexistentEmail";
+
+		when(jwtTokenUtil.extractUsername(tokenForNonexistentEmail)).thenReturn(nonexistentEmail);
+		when(jwtTokenUtil.validateToken(tokenForNonexistentEmail, nonexistentEmail)).thenReturn(true);
+
+		InvalidCredentialsException exception = assertThrows(InvalidCredentialsException.class, () ->
+			authService.login(tokenForNonexistentEmail)
+		);
+
+		assertEquals("Login failed", exception.getMessage());
 	}
 }
